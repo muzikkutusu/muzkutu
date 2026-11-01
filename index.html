@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#14202b">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Müzik Kutusu</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600;800&family=DM+Sans:wght@400;600&display=swap">
+<style>
+:root{--bg:#f2ede4;--panel:#e6dfd2;--ink:#1d2a3a;--off:#cfc6b4;--on:#2f6f73;--hit:#e0a526;--muted:#5d6670;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#14202b;--panel:#1c2b39;--ink:#f1ead9;--off:#2c3d4d;--on:#5fb3b3;--hit:#f2c14e;--muted:#9fb0bd}}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"DM Sans",system-ui,sans-serif;min-height:100vh}
+main{max-width:760px;margin:0 auto;padding:24px 16px 40px}
+h1{font-family:Fraunces,Georgia,serif;font-weight:800;font-size:clamp(2rem,7vw,3.2rem);margin:0 0 4px;letter-spacing:-.02em}
+p.sub{margin:0 0 20px;color:var(--muted)}
+.bar{display:flex;flex-wrap:wrap;gap:12px;align-items:center;background:var(--panel);padding:12px 14px;border-radius:14px;margin-bottom:16px}
+button{font:inherit;font-weight:600;border:0;border-radius:10px;padding:10px 16px;background:var(--ink);color:var(--bg);cursor:pointer}
+button.sec{background:transparent;color:var(--ink);border:2px solid var(--ink)}
+button:focus-visible,.cell:focus-visible,select:focus-visible,input:focus-visible{outline:3px solid var(--hit);outline-offset:2px}
+label{display:flex;gap:8px;align-items:center;font-size:.95rem}
+select{font:inherit;padding:8px;border-radius:8px;border:2px solid var(--ink);background:var(--bg);color:var(--ink)}
+input[type=range]{accent-color:var(--on)}
+.grid{background:var(--panel);padding:14px;border-radius:14px;overflow-x:auto}
+.row{display:grid;grid-template-columns:84px repeat(16,minmax(26px,1fr));gap:4px;margin-bottom:4px;min-width:700px;align-items:center}
+.pair{display:flex;gap:2px}
+.shapes .cell.now{background:var(--hit)}
+.sharebox input[type=text]{font:inherit;padding:8px;border-radius:8px;border:2px solid var(--ink);background:var(--bg);color:var(--ink)}
+#chip{display:inline-block;background:var(--panel);padding:4px 12px;border-radius:999px;font-weight:600;margin-bottom:8px}
+#chip[hidden]{display:none}
+#pList{list-style:none;padding:0;margin:10px 0}
+#pList li{display:flex;gap:8px;align-items:center;padding:6px 0;border-bottom:1px solid var(--off)}
+#pList .pn{flex:1;font-weight:600;overflow-wrap:anywhere}
+.av{padding:4px 8px;font-size:1.3rem}
+.shapes .cell[data-r="0"],.shapes .cell[data-r="1"],.shapes .cell[data-r="2"],.shapes .cell[data-r="3"],.shapes .cell[data-r="4"],.shapes .cell[data-r="5"]{clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%)}
+.shapes .cell[data-r="6"]{clip-path:inset(28% 0)}
+.shapes .cell[data-r="7"]{clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%)}
+.shapes .cell[data-r="8"]{border-radius:50%}
+.shapes .cell[data-r="9"]{clip-path:polygon(50% 0,100% 100%,0 100%)}
+.shapes .cell[data-r="10"]{clip-path:polygon(50% 0,100% 38%,82% 100%,18% 100%,0 38%)}
+.shapes .cell[data-r="11"]{clip-path:polygon(22% 0,100% 0,78% 100%,0 100%)}
+.shapes .cell[data-r="12"]{clip-path:polygon(50% 25%,60% 10%,78% 8%,92% 22%,92% 45%,50% 95%,8% 45%,8% 22%,22% 8%,40% 10%)}
+.shapes .cell[data-r="13"]{clip-path:inset(0 26%)}
+.shapes .cell[data-r="14"]{clip-path:inset(38% 0)}
+.shapes .cell[data-r="15"]{border-radius:50% 50% 0 0}
+.shapes .cell[data-r="16"]{clip-path:polygon(50% 0,82% 40%,100% 68%,88% 92%,50% 100%,12% 92%,0 68%,18% 40%)}
+.shapes .cell[data-r="17"]{clip-path:polygon(0 12%,62% 12%,100% 50%,62% 88%,0 88%,30% 50%)}
+.shapes .cell[data-r="18"]{clip-path:polygon(35% 0,65% 0,65% 35%,100% 35%,100% 65%,65% 65%,65% 100%,35% 100%,35% 65%,0 65%,0 35%,35% 35%)}
+button:disabled{opacity:.4;cursor:default}
+.sharebox{background:var(--panel);padding:14px;border-radius:14px;margin-bottom:16px}
+.sharebox[hidden]{display:none}
+.sharebox p{margin:0 0 8px;color:var(--muted)}
+.sharebox textarea{width:100%;font:12px/1.4 ui-monospace,Menlo,Consolas,monospace;background:var(--bg);color:var(--ink);border:2px solid var(--ink);border-radius:8px;padding:8px;margin-bottom:8px}
+.sharebox .acts{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+#ttl .ch{display:inline-block;animation:drop .9s both}
+@keyframes drop{0%{transform:translateY(-420%) rotate(-35deg);opacity:0;animation-timing-function:cubic-bezier(.5,0,1,.6)}45%{transform:translateY(0) rotate(6deg);opacity:1;animation-timing-function:ease-out}62%{transform:translateY(-22%) rotate(-3deg);animation-timing-function:ease-in}78%{transform:translateY(0) rotate(1deg);animation-timing-function:ease-out}88%{transform:translateY(-6%)}100%{transform:none;opacity:1}}
+@media (prefers-reduced-motion:reduce){#ttl .ch{animation:none}}
+#gol{background:#111;color:#fff;box-shadow:0 0 0 2px var(--ink);letter-spacing:.06em}.pair .cell{flex:1;min-width:0}
+.name{font-weight:600;font-size:.9rem;cursor:pointer;user-select:none}
+.name:hover{color:var(--on)}
+.name:empty{cursor:default}
+.name:focus-visible{outline:3px solid var(--hit);outline-offset:2px;border-radius:4px}
+.cell{height:34px;border-radius:6px;background:var(--off);border:0;padding:0}
+.cell.on{background:var(--on)}
+.cell.beat{box-shadow:inset 0 -3px 0 rgba(0,0,0,.12)}
+.cell.now{outline:3px solid var(--hit);outline-offset:-3px}
+.row.head .cell{height:6px;background:transparent}
+.row.head .cell.now{background:var(--hit);outline:0}
+</style>
+</head>
+<body>
+<main>
+<div id="chip" hidden></div><h1 id="ttl">Müzik Kutusu</h1>
+<p class="sub" id="sub">Kutulara dokun, döngüyü çal. Melodi satırları seçtiğin gamda kalır, o yüzden hep ahenkli çıkar.</p>
+<div class="bar">
+  <button id="play">Çal</button>
+  <button id="rand" class="sec">Rastgele üret</button>
+  <button id="clear" class="sec">Temizle</button>
+  <button id="gol">GOL!</button>
+  <button id="tribun" class="sec">Tribün ritmi</button>
+  <button id="shapeBtn" class="sec" aria-pressed="false">Sembolleri değiştir</button>
+  <button id="profBtn" class="sec">🎧 Profil</button>
+  <button id="share" class="sec">Kaydet / Paylaş</button>
+  <button id="export" class="sec">Müziği indir</button><span id="expMsg" role="status" style="color:var(--muted)"></span>
+  <label><span id="lLang">Dil</span> <span id="flag" aria-hidden="true" style="font-size:1.5rem;line-height:1">🇹🇷</span><select id="lang">
+    <option value="tr">Türkçe</option>
+    <option value="en">English</option>
+    <option value="pt">Português (Brasil)</option>
+    <option value="fr">Français</option>
+    <option value="ko">한국어</option>
+    <option value="ja">日本語</option>
+    <option value="zh">简体中文</option>
+    <option value="tw">繁體中文（台灣）</option>
+  </select></label>
+  <label><span id="lTempo">Tempo</span> <input id="bpm" type="range" min="70" max="180" value="108"><span id="bpmv">108</span></label>
+  <label><span id="lGam">Gam</span> <select id="scale">
+    <option value="minor">La minör pentatonik</option>
+    <option value="major">Do majör pentatonik</option>
+    <option value="hijaz">Hicaz (Re)</option>
+  </select></label>
+</div>
+<div class="sharebox" id="profbox" hidden>
+<div class="acts"><span id="pAv" style="font-size:2.4rem;line-height:1" aria-hidden="true">🎧</span><div id="avs" class="acts"></div></div>
+<div class="acts" style="margin-top:10px"><label><span id="lpName">Adın</span> <input type="text" id="pName" maxlength="24"></label></div>
+<h2 id="pSongsT" style="font-size:1.1rem;margin:14px 0 8px">Şarkılarım</h2>
+<div class="acts"><input type="text" id="pSongName" maxlength="30"><button id="pSave">Mevcut müziği kaydet</button><span id="pMsg" role="status" style="color:var(--muted)"></span></div>
+<ul id="pList"></ul>
+<button id="pClose" class="sec">Kapat</button>
+</div>
+<div class="sharebox" id="audiobox"><div class="acts">
+<button id="songBtn" class="sec">Şarkı yükle</button><input type="file" id="songFile" accept="audio/*" hidden><span id="songName" style="color:var(--muted)"></span>
+<label><span id="lVol">Şarkı sesi</span> <input id="songVol" type="range" min="0" max="100" value="70"></label>
+<button id="songClear" class="sec" hidden>Kaldır</button>
+<button id="convBtn" class="sec" disabled>Şarkıyı karelere çevir</button><span id="convMsg" role="status" style="color:var(--muted)"></span>
+<button id="songMuteBtn" class="sec" disabled>Arkadaki müziği durdur</button><button id="gridMuteBtn" class="sec">Kareleri durdur</button>
+<button id="sndBtn" class="sec">Ses yükle (satır)</button><input type="file" id="sndFile" accept="audio/*" hidden><span id="sndName" style="color:var(--muted)"></span>
+</div></div>
+<div class="sharebox" id="sharebox" hidden>
+<p id="shareHint"></p>
+<textarea id="code" rows="4" spellcheck="false"></textarea>
+<div class="acts"><button id="copyCode">Kopyala</button><button id="loadCode" class="sec">Yükle</button><button id="closeShare" class="sec">Kapat</button><span id="shareMsg" role="status"></span></div>
+</div>
+<div class="grid" id="grid" aria-label="Ritim ve melodi ızgarası"></div>
+<div id="extra"></div>
+<div style="margin-top:16px;text-align:center;display:flex;gap:12px;justify-content:center;flex-wrap:wrap"><button id="more" class="sec">Daha fazla kutu</button><button id="less" class="sec" disabled>Son kutuyu sil</button></div>
+</main>
+<script>
+(function(){
+const STEPS=16;
+let rec=null;
+if(typeof AudioNode!=="undefined"){const _c=AudioNode.prototype.connect;AudioNode.prototype.connect=function(d,...a){if(rec&&ctx&&d===ctx.destination)_c.call(this,rec.dest);return _c.call(this,d,...a)}}
+const SCALES={minor:[57,60,62,64,67,69],major:[60,62,64,67,69,72],hijaz:[62,63,66,67,69,70]};
+const tracks=[
+ {n:"Melodi",t:"lead",i:5},{n:"Melodi",t:"lead",i:4},{n:"Melodi",t:"lead",i:3},{n:"Melodi",t:"lead",i:2},{n:"Melodi",t:"lead",i:1},{n:"Melodi",t:"lead",i:0},
+ {n:"Zil",t:"hat"},{n:"Trampet",t:"snare"},{n:"Davul",t:"kick"},{n:"Dık",t:"tik"},{n:"Akor",t:"strum"},{n:"Arpej",t:"arp"},{n:"Peluş",t:"squish"},{n:"Okul zili",t:"bell"},{n:"Kalem",t:"pencil"},{n:"Kapı zili",t:"door"},{n:"Yağmur",t:"rain"},{n:"Kuş",t:"bird"},{n:"Ses",t:"user"}
+];
+const names=["Melodi","","","","","","Zil","Trampet","Davul","Dık","Gitar akor","Gitar tel","Peluş","Okul zili","Kalem","Kapı zili","Yağmur","Kuş","Ses"];
+const state=tracks.map(()=>Array(STEPS).fill(false));
+let ctx,playing=false,step=0,nextTime=0,timer=null,scale="minor";
+const grid=document.getElementById("grid"),cells=tracks.map(()=>[]),headCells=[];let bars=1;
+const BARCOLORS=["#d94a4a","#3f9e5a","#8a5cc7","#e08a2b","#d6559a","#3f7fd0"];
+function buildBar(bi){
+  const g=bi===0?grid:document.createElement("div");
+  if(bi>0){g.className="grid";g.style.marginTop="14px";g.style.setProperty("--on",BARCOLORS[(bi-1)%BARCOLORS.length]);document.getElementById("extra").appendChild(g);state.forEach(row=>{for(let i=0;i<STEPS;i++)row.push(false)})}
+const head=document.createElement("div");head.className="row head";
+head.appendChild(document.createElement("span"));
+
+for(let s=0;s<STEPS;s++){const c=document.createElement("span");c.className="cell";head.appendChild(c);headCells.push(c)}
+g.appendChild(head);
+tracks.forEach((tr,r)=>{
+  const row=document.createElement("div");row.className="row";
+  const nm=document.createElement("span");nm.className="name";nm.textContent=names[r];
+  if(r===0||r>=6){
+    nm.tabIndex=0;nm.setAttribute("role","button");
+    const hit=()=>{init();if(r===0){const t=ctx.currentTime+0.01;[0,1,2,3,4,5].forEach(k=>lead(t+k*0.12,k))}else preview(r)};
+    nm.onclick=hit;nm.onkeydown=e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();hit()}};
+  }
+  row.appendChild(nm);
+  let pr;
+  for(let s=0;s<STEPS;s++){
+    const b=document.createElement("button");b.className="cell"+(s%4===0?" beat":"");
+    b.setAttribute("aria-label",(names[r]||"Melodi")+" kare "+(Math.floor(s/2)+1)+(s%2?" ikinci yarı":" ilk yarı"));
+    b.setAttribute("aria-pressed","false");
+    const gs=bi*STEPS+s;b.dataset.r=r;b.onclick=()=>{toggle(r,gs);if(state[r][gs])init(),preview(r)};
+    row.appendChild(b);cells[r].push(b);
+  }
+  g.appendChild(row);
+});
+}
+buildBar(0);
+function toggle(r,s,v){state[r][s]=v===undefined?!state[r][s]:v;cells[r][s].classList.toggle("on",state[r][s]);cells[r][s].setAttribute("aria-pressed",state[r][s])}
+function init(){if(!ctx){ctx=new (window.AudioContext||window.webkitAudioContext)()}if(ctx.state==="suspended")ctx.resume()}
+function midi(n){return 440*Math.pow(2,(n-69)/12)}
+function env(g,t,a,d,peak){g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(peak,t+a);g.gain.exponentialRampToValueAtTime(0.0001,t+a+d)}
+function lead(t,i){
+  const f=midi(SCALES[scale][i]);
+  [0,1].forEach(k=>{
+    const o=ctx.createOscillator(),g=ctx.createGain();
+    o.type=k?"triangle":"sawtooth";o.frequency.value=f;o.detune.value=k?7:-5;
+    const fl=ctx.createBiquadFilter();fl.type="lowpass";fl.frequency.value=2400;
+    env(g,t,0.01,0.35,k?0.12:0.07);
+    o.connect(fl).connect(g).connect(ctx.destination);o.start(t);o.stop(t+0.5);
+  });
+}
+function tik(t){const o=ctx.createOscillator(),g=ctx.createGain();o.type="triangle";o.frequency.setValueAtTime(1900,t);o.frequency.exponentialRampToValueAtTime(1200,t+0.03);env(g,t,0.002,0.05,0.5);o.connect(g).connect(ctx.destination);o.start(t);o.stop(t+0.08)}
+function kick(t){const o=ctx.createOscillator(),g=ctx.createGain();o.frequency.setValueAtTime(150,t);o.frequency.exponentialRampToValueAtTime(45,t+0.15);env(g,t,0.005,0.25,0.9);o.connect(g).connect(ctx.destination);o.start(t);o.stop(t+0.35)}
+function noise(t,dur,hp,peak){
+  const n=Math.floor(ctx.sampleRate*dur),buf=ctx.createBuffer(1,n,ctx.sampleRate),d=buf.getChannelData(0);
+  for(let i=0;i<n;i++)d[i]=Math.random()*2-1;
+  const s=ctx.createBufferSource();s.buffer=buf;
+  const f=ctx.createBiquadFilter();f.type="highpass";f.frequency.value=hp;
+  const g=ctx.createGain();env(g,t,0.002,dur,peak);
+  s.connect(f).connect(g).connect(ctx.destination);s.start(t);
+}
+const CH={minor:[0,1,3],major:[0,2,3],hijaz:[0,2,4]},pluckCache={};
+function chord(){return CH[scale].map(i=>SCALES[scale][i])}
+function pluckBuf(f){
+  const key=Math.round(f*10);if(pluckCache[key])return pluckCache[key];
+  const sr=ctx.sampleRate,len=Math.floor(sr*1.4),N=Math.max(2,Math.round(sr/f)),b=ctx.createBuffer(1,len,sr),d=b.getChannelData(0);
+  for(let i=0;i<N;i++)d[i]=Math.random()*2-1;
+  for(let i=1;i<N;i++)d[i]=0.5*(d[i]+d[i-1]);
+  for(let i=N;i<len;i++)d[i]=0.5*(d[i-N]+d[i-N+1])*0.998;
+  return pluckCache[key]=b;
+}
+function pluck(t,f,v){
+  const s=ctx.createBufferSource();s.buffer=pluckBuf(f);
+  const fl=ctx.createBiquadFilter();fl.type="lowpass";fl.frequency.value=3200;
+  const g=ctx.createGain();g.gain.value=v;
+  s.connect(fl).connect(g).connect(ctx.destination);s.start(t);
+}
+function pencil(t){
+  const n=Math.floor(ctx.sampleRate*0.45),buf=ctx.createBuffer(1,n,ctx.sampleRate),d=buf.getChannelData(0);
+  for(let i=0;i<n;i++)d[i]=Math.random()*2-1;
+  const s=ctx.createBufferSource();s.buffer=buf;
+  const bp=ctx.createBiquadFilter();bp.type="bandpass";bp.Q.value=1.1;
+  const g=ctx.createGain();g.gain.setValueAtTime(0,t);
+  for(let k=0;k<5;k++){
+    const a=t+k*0.08;
+    bp.frequency.setValueAtTime(k%2?4600:3300,a);
+    g.gain.linearRampToValueAtTime(0.3+Math.random()*0.15,a+0.025);
+    g.gain.linearRampToValueAtTime(0.04,a+0.07);
+  }
+  g.gain.linearRampToValueAtTime(0,t+0.42);
+  s.connect(bp).connect(g).connect(ctx.destination);s.start(t);
+}
+function bell(t){
+  const g=ctx.createGain(),am=ctx.createGain(),l=ctx.createOscillator(),lg=ctx.createGain();
+  env(g,t,0.005,1.2,0.35);
+  am.gain.value=0.5;l.type="square";l.frequency.value=24;lg.gain.value=0.5;
+  l.connect(lg).connect(am.gain);
+  [1250,1880,2630,3350].forEach((f,i)=>{
+    const o=ctx.createOscillator(),og=ctx.createGain();
+    o.type="sine";o.frequency.value=f;og.gain.value=0.5/(i+1);
+    o.connect(og).connect(am);o.start(t);o.stop(t+1.4);
+  });
+  am.connect(g).connect(ctx.destination);
+  l.start(t);l.stop(t+1.4);
+}
+function door(t){[[784,0],[622,0.4]].forEach(([f,d])=>{[1,2.01,3.02].forEach((m,i)=>{const o=ctx.createOscillator(),g=ctx.createGain();o.type="sine";o.frequency.value=f*m;env(g,t+d,0.005,0.9,0.28/(i+1));o.connect(g).connect(ctx.destination);o.start(t+d);o.stop(t+d+1)})})}
+function rain(t){
+  const dur=0.9,n=Math.floor(ctx.sampleRate*dur),buf=ctx.createBuffer(1,n,ctx.sampleRate),d=buf.getChannelData(0);
+  for(let i=0;i<n;i++)d[i]=Math.random()*2-1;
+  const s=ctx.createBufferSource();s.buffer=buf;
+  const f=ctx.createBiquadFilter();f.type="highpass";f.frequency.value=3500;
+  const g=ctx.createGain();g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(0.18,t+0.15);g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+  s.connect(f).connect(g).connect(ctx.destination);s.start(t);
+  for(let k=0;k<7;k++){const tt=t+Math.random()*0.7,o=ctx.createOscillator(),og=ctx.createGain(),fq=1200+Math.random()*1800;o.type="sine";o.frequency.setValueAtTime(fq,tt);o.frequency.exponentialRampToValueAtTime(fq*1.6,tt+0.04);env(og,tt,0.002,0.05,0.12);o.connect(og).connect(ctx.destination);o.start(tt);o.stop(tt+0.08)}
+}
+function bird(t){[0,0.12,0.24].forEach((d,k)=>{const o=ctx.createOscillator(),g=ctx.createGain(),a=t+d,f0=2800+k*300;o.type="sine";o.frequency.setValueAtTime(f0,a);o.frequency.exponentialRampToValueAtTime(f0*1.8,a+0.05);o.frequency.exponentialRampToValueAtTime(f0*1.2,a+0.09);env(g,a,0.005,0.09,0.25);o.connect(g).connect(ctx.destination);o.start(a);o.stop(a+0.13)})}
+function squish(t){
+  const f0=650+Math.random()*250,o=ctx.createOscillator(),g=ctx.createGain(),l=ctx.createOscillator(),lg=ctx.createGain();
+  o.type="triangle";o.frequency.setValueAtTime(f0,t);
+  o.frequency.exponentialRampToValueAtTime(f0*2,t+0.07);
+  o.frequency.exponentialRampToValueAtTime(f0*1.4,t+0.2);
+  l.frequency.value=38;lg.gain.value=25;l.connect(lg).connect(o.frequency);
+  env(g,t,0.01,0.2,0.35);
+  o.connect(g).connect(ctx.destination);
+  o.start(t);o.stop(t+0.3);l.start(t);l.stop(t+0.3);
+  noise(t,0.12,2500,0.1);
+}
+function strum(t){const c=chord().map(n=>n-12);c.unshift(c[0]-12);c.forEach((n,k)=>pluck(t+k*0.022,midi(n),0.45))}
+function arp(t,s){const c=chord();pluck(t,midi(c[Math.floor(s/2)%c.length]),0.5)}
+function play(r,t,s){
+  const tr=tracks[r];
+  if(tr.t==="lead")lead(t,tr.i);
+  else if(tr.t==="kick")kick(t);
+  else if(tr.t==="snare")noise(t,0.18,1200,0.35);
+  else if(tr.t==="tik")tik(t);
+  else if(tr.t==="strum")strum(t);
+  else if(tr.t==="arp")arp(t,s);
+  else if(tr.t==="squish")squish(t);
+  else if(tr.t==="bell")bell(t);
+  else if(tr.t==="pencil")pencil(t);
+  else if(tr.t==="door")door(t);
+  else if(tr.t==="rain")rain(t);
+  else if(tr.t==="bird")bird(t);
+  else if(tr.t==="user")userSnd(t);
+  else noise(t,0.05,7000,0.2);
+}
+function preview(r){play(r,ctx.currentTime+0.01,0)}
+function tick(){
+  const spb=60/document.getElementById("bpm").value/4;
+  while(nextTime<ctx.currentTime+0.15){
+    if(step>=STEPS*bars)step=0;const s=step;
+    if(!gridMuted)tracks.forEach((_,r)=>{if(state[r][s])play(r,nextTime,s)});
+    const delay=Math.max(0,(nextTime-ctx.currentTime)*1000);
+    setTimeout(()=>{headCells.forEach((c,i)=>c.classList.toggle("now",i===s));cells.forEach(row=>row.forEach((c,i)=>c.classList.toggle("now",i===s)))},delay);
+    nextTime+=spb;step=(step+1)%(STEPS*bars);
+  }
+}
+const playBtn=document.getElementById("play");
+playBtn.onclick=()=>{
+  init();
+  if(playing){playing=false;clearInterval(timer);playBtn.textContent=T.play;
+    headCells.concat(...cells).forEach(c=>c.classList.remove("now"));return}
+  playing=true;step=0;nextTime=ctx.currentTime+0.05;playBtn.textContent=T.stop;
+  timer=setInterval(tick,25);
+};
+document.getElementById("bpm").oninput=e=>document.getElementById("bpmv").textContent=e.target.value;
+document.getElementById("scale").onchange=e=>scale=e.target.value;
+document.getElementById("clear").onclick=()=>state.forEach((row,r)=>row.forEach((_,s)=>toggle(r,s,false)));
+document.getElementById("rand").onclick=()=>{
+  state.forEach((row,r)=>row.forEach((_,s)=>toggle(r,s,false)));
+  for(let s=0;s<STEPS;s+=4)toggle(8,s,true);
+  toggle(8,10,Math.random()<.5);
+  toggle(7,4,true);toggle(7,12,true);
+  for(let s=1;s<STEPS;s+=2)toggle(9,s,true);
+  toggle(10,0,true);toggle(10,6,true);toggle(10,10,true);
+  for(let s=0;s<STEPS;s+=2)toggle(11,s,true);
+  toggle(12,7,true);toggle(12,15,true);
+  toggle(13,0,true);toggle(14,3,true);toggle(14,11,true);
+  toggle(15,0,Math.random()<.3);toggle(16,8,Math.random()<.5);toggle(17,5,true);toggle(17,13,Math.random()<.5);
+  for(let s=0;s<STEPS;s+=2)toggle(6,s,true);
+  let i=3;
+  for(let s=0;s<STEPS;s++){
+    if(Math.random()<(s%4===0?.7:.35)){
+      i=Math.max(0,Math.min(5,i+Math.floor(Math.random()*3)-1));
+      toggle(5-i,s,true);
+    }
+  }
+};
+const baseRand=document.getElementById("rand").onclick;
+function melodyBar(o){
+  let i=3;
+  for(let s=0;s<STEPS;s++){
+    if(Math.random()<(s%4===0?.7:.35)){
+      i=Math.max(0,Math.min(5,i+Math.floor(Math.random()*3)-1));
+      toggle(5-i,o+s,true);
+    }
+  }
+}
+document.getElementById("rand").onclick=()=>{
+  baseRand();
+  for(let b=1;b<bars;b++){
+    const o=b*STEPS;
+    for(let r=6;r<tracks.length;r++)for(let s=0;s<STEPS;s++)toggle(r,o+s,state[r][s]&&Math.random()<.9);
+    melodyBar(o);
+  }
+};
+document.getElementById("more").onclick=()=>{
+  const o=bars*STEPS,p=o-STEPS;
+  buildBar(bars);bars++;
+  for(let r=6;r<tracks.length;r++)for(let s=0;s<STEPS;s++)toggle(r,o+s,state[r][p+s]);
+  melodyBar(o);
+  const nmf=r=>r<6?T.n[0]:T.n[r-5];
+  [...document.querySelectorAll(".name")].slice(-tracks.length).forEach((el,r)=>el.textContent=r===0||r>=6?nmf(r):"");
+  cells.forEach((row,r)=>{for(let k=o;k<o+STEPS;k++)row[k].setAttribute("aria-label",nmf(r)+" "+T.cell+" "+(k+1))});
+  document.getElementById("more").scrollIntoView({behavior:"smooth",block:"end"});
+};
+function updLess(){document.getElementById("less").disabled=bars<=1;document.getElementById("more").disabled=bars>=12}
+function removeBar(){
+  if(bars<=1)return;
+  const ex=document.getElementById("extra");ex.removeChild(ex.lastChild);
+  state.forEach(row=>{row.length-=STEPS});cells.forEach(row=>{row.length-=STEPS});headCells.length-=STEPS;
+  bars--;if(step>=STEPS*bars)step=0;
+  updLess();
+}
+function relabel(){
+  const nm=r=>r<6?T.n[0]:T.n[r-5];
+  document.querySelectorAll(".name").forEach((el,i)=>{const r=i%tracks.length;el.textContent=r===0||r>=6?nm(r):""});
+  cells.forEach((row,r)=>row.forEach((b,s)=>b.setAttribute("aria-label",nm(r)+" "+T.cell+" "+(s+1))));
+}
+const baseMore=document.getElementById("more").onclick;
+document.getElementById("more").onclick=()=>{if(bars>=12)return;baseMore();updLess()};
+document.getElementById("less").onclick=removeBar;
+function encodeSong(){
+  const o={v:1,b:bars,bpm:+document.getElementById("bpm").value,sc:scale,s:state.map(row=>row.map(x=>x?1:0).join(""))};
+  return btoa(JSON.stringify(o));
+}
+function loadSong(txt){
+  let o;try{const m=txt.replace(/\s+/g,"").match(/[A-Za-z0-9+\/_-]{20,}={0,2}/);if(!m)return false;let b=m[0].replace(/-/g,"+").replace(/_/g,"/").replace(/=+$/,"");while(b.length%4)b+="=";o=JSON.parse(atob(b))}catch(e){return false}
+  if(!o||o.v!==1||!Number.isInteger(o.b)||o.b<1||o.b>12||!Array.isArray(o.s))return false;
+  if(o.s.length>tracks.length||o.s.some(x=>typeof x!=="string"||x.length!==o.b*STEPS||/[^01]/.test(x)))return false;
+  if(!SCALES[o.sc])return false;
+  while(bars>o.b)removeBar();
+  while(bars<o.b){buildBar(bars);bars++}
+  scale=o.sc;document.getElementById("scale").value=o.sc;
+  const bp=Math.max(70,Math.min(180,+o.bpm||108));document.getElementById("bpm").value=bp;document.getElementById("bpmv").textContent=bp;
+  state.forEach((row,r)=>row.forEach((_,s)=>toggle(r,s,!!o.s[r]&&o.s[r][s]==="1")));
+  relabel();updLess();return true;
+}
+const sb=document.getElementById("sharebox"),codeEl=document.getElementById("code"),shareMsg=document.getElementById("shareMsg");
+document.getElementById("share").onclick=()=>{sb.hidden=false;codeEl.value=encodeSong();codeEl.select();shareMsg.textContent=""};
+document.getElementById("copyCode").onclick=()=>{
+  const done=()=>{shareMsg.textContent=T.copied};
+  codeEl.select();
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(codeEl.value).then(done,()=>{try{document.execCommand("copy");done()}catch(e){}})}
+  else{try{document.execCommand("copy");done()}catch(e){}}
+};
+document.getElementById("loadCode").onclick=()=>{shareMsg.textContent=loadSong(codeEl.value)?T.loaded:T.bad};
+document.getElementById("closeShare").onclick=()=>{sb.hidden=true};
+const FALLBACK_DL={save:async({filename,data})=>{const a=document.createElement("a");a.href=URL.createObjectURL(data);a.download=filename;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000)}};
+const exBtn=document.getElementById("export"),exMsg=document.getElementById("expMsg");
+const wait=ms=>new Promise(r=>setTimeout(r,ms));
+exBtn.onclick=async()=>{
+  const dl=(window.claude&&claude.use)?await claude.use("downloads"):FALLBACK_DL;
+  if(!dl){exMsg.textContent=T.noExp;return}
+  const types=[["audio/mp4","mp4"],["audio/webm;codecs=opus","webm"],["audio/webm","webm"]];
+  const pick=typeof MediaRecorder!=="undefined"?types.find(x=>MediaRecorder.isTypeSupported(x[0])):null;
+  if(!pick){exMsg.textContent=T.noExp;return}
+  exBtn.disabled=true;exMsg.textContent="";init();
+  if(playing)playBtn.click();
+  const spb=60/document.getElementById("bpm").value/4,loop=STEPS*bars*spb;
+  const dest=ctx.createMediaStreamDestination();rec={dest};
+  const mr=new MediaRecorder(dest.stream,{mimeType:pick[0]}),chunks=[];
+  mr.ondataavailable=e=>{if(e.data&&e.data.size)chunks.push(e.data)};
+  const stopped=new Promise(r=>{mr.onstop=r});
+  mr.start();playBtn.click();
+  const total=loop+1.7,t0=performance.now(),iv=setInterval(()=>{exMsg.textContent=T.rec+" "+Math.max(0,Math.ceil(total-(performance.now()-t0)/1000))+"s"},250);
+  const cut=0.15+spb/2;
+  await wait((loop-cut)*1000);
+  if(playing)playBtn.click();
+  await wait((1.7+cut)*1000);
+  mr.stop();await stopped;clearInterval(iv);rec=null;
+  const blob=new Blob(chunks,{type:pick[0]});
+  try{await dl.save({filename:"muzik-kutusu."+pick[1],data:blob});exMsg.textContent=T.expOk}
+  catch(e){exMsg.textContent=e&&e.code==="declined"?"":T.expFail}
+  exBtn.disabled=false;
+};
+let songBuf=null,songSrc=null,songG=null,sndBuf=null;
+function stopSong(){if(songSrc){try{songSrc.stop()}catch(e){}songSrc=null}}
+function startSong(){
+  if(!songBuf||songMuted)return;
+  stopSong();init();
+  songG=ctx.createGain();songG.gain.value=document.getElementById("songVol").value/100;songG.connect(ctx.destination);
+  songSrc=ctx.createBufferSource();songSrc.buffer=songBuf;songSrc.loop=true;songSrc.connect(songG);songSrc.start(ctx.currentTime+0.05);
+}
+function userSnd(t){
+  if(!sndBuf)return;
+  const s=ctx.createBufferSource(),g=ctx.createGain();s.buffer=sndBuf;g.gain.value=0.9;
+  s.connect(g).connect(ctx.destination);s.start(t,0,Math.min(sndBuf.duration,6));
+}
+async function loadAudio(file){
+  if(file.size>40*1024*1024)return{err:T.big};
+  init();
+  try{const ab=await file.arrayBuffer();return{buf:await ctx.decodeAudioData(ab)}}catch(e){return{err:T.badA}}
+}
+playBtn.addEventListener("click",()=>{playing?startSong():stopSong()});
+document.getElementById("songVol").oninput=e=>{if(songG)songG.gain.value=e.target.value/100};
+document.getElementById("songBtn").onclick=()=>document.getElementById("songFile").click();
+document.getElementById("songFile").onchange=async e=>{
+  const f=e.target.files[0];e.target.value="";if(!f)return;
+  const r=await loadAudio(f),nm=document.getElementById("songName");
+  if(r.err){nm.textContent=r.err;return}
+  songBuf=r.buf;nm.textContent=f.name;document.getElementById("songClear").hidden=false;document.getElementById("convBtn").disabled=false;document.getElementById("songMuteBtn").disabled=false;
+  if(playing)startSong();
+};
+document.getElementById("songClear").onclick=()=>{stopSong();songBuf=null;document.getElementById("songName").textContent="";document.getElementById("songClear").hidden=true;document.getElementById("convBtn").disabled=true;document.getElementById("songMuteBtn").disabled=true;songMuted=false;labelMute();document.getElementById("convMsg").textContent=""};
+document.getElementById("sndBtn").onclick=()=>document.getElementById("sndFile").click();
+document.getElementById("sndFile").onchange=async e=>{
+  const f=e.target.files[0];e.target.value="";if(!f)return;
+  const r=await loadAudio(f),nm=document.getElementById("sndName");
+  if(r.err){nm.textContent=r.err;return}
+  sndBuf=r.buf;nm.textContent=f.name;userSnd(ctx.currentTime+0.01);
+};
+function monoData(buf,n){const o=new Float32Array(n),c=buf.numberOfChannels;for(let ch=0;ch<c;ch++){const d=buf.getChannelData(ch);for(let i=0;i<n;i++)o[i]+=d[i]/c}return o}
+function yinPitch(x,sr,c){
+  const W=1536,maxLag=Math.floor(sr/70),minLag=Math.floor(sr/1000);
+  if(x.length<W+maxLag+2)return null;
+  const st=Math.max(0,Math.min(x.length-W-maxLag-1,c-(W>>1)));
+  const d=new Float32Array(maxLag+1);
+  for(let t=1;t<=maxLag;t++){let s=0;for(let j=0;j<W;j+=2){const df=x[st+j]-x[st+j+t];s+=df*df}d[t]=s}
+  const cm=new Float32Array(maxLag+1);let run=0;
+  for(let t=1;t<=maxLag;t++){run+=d[t];cm[t]=run?d[t]*t/run:1}
+  let t=minLag;
+  while(t<maxLag&&cm[t]>=0.15)t++;
+  if(t>=maxLag){let bt=minLag;for(let k=minLag;k<maxLag;k++)if(cm[k]<cm[bt])bt=k;if(cm[bt]>0.25)return null;t=bt}
+  else{while(t+1<maxLag&&cm[t+1]<cm[t])t++}
+  return sr/t;
+}
+function analyzeSong(){
+  const buf=songBuf,sr=buf.sampleRate,x=monoData(buf,Math.min(buf.length,Math.floor(sr*45)));
+  const hop=512,nh=Math.floor(x.length/hop);
+  if(nh<200)return null;
+  const k=f=>1-Math.exp(-2*Math.PI*f/sr),aL=k(150),aM1=k(500),aM2=k(4000),aH=k(6000);
+  let yL=0,yM1=0,yM2=0,yH=0;
+  const eL=new Float32Array(nh),eM=new Float32Array(nh),eH=new Float32Array(nh),eT=new Float32Array(nh);
+  for(let h=0;h<nh;h++){
+    let sL=0,sM=0,sH=0,sT=0;
+    for(let i=h*hop,e=i+hop;i<e;i++){
+      const v=x[i];
+      yL+=aL*(v-yL);yM1+=aM1*(v-yM1);yM2+=aM2*(v-yM2);yH+=aH*(v-yH);
+      const m=yM2-yM1,hi=v-yH;
+      sL+=yL*yL;sM+=m*m;sH+=hi*hi;sT+=v*v;
+    }
+    eL[h]=Math.sqrt(sL/hop);eM[h]=Math.sqrt(sM/hop);eH[h]=Math.sqrt(sH/hop);eT[h]=Math.sqrt(sT/hop);
+  }
+  const flux=e=>{const o=new Float32Array(nh);for(let h=1;h<nh;h++)o[h]=Math.max(0,e[h]-e[h-1]);return o};
+  const mx=a=>{let m=0;for(let i=0;i<a.length;i++)if(a[i]>m)m=a[i];return m||1};
+  const fL=flux(eL),fM=flux(eM),fH=flux(eH),nL=mx(fL),nM=mx(fM),nH=mx(fH),tot=mx(eT);
+  const on=new Float32Array(nh);for(let h=0;h<nh;h++)on[h]=fL[h]/nL+fM[h]/nM+fH[h]/nH;
+  const hr=sr/hop;let best=0,bpm=108;
+  for(let b=70;b<=180;b++){
+    const lag=Math.round(60/b*hr),l2=lag*2;let s=0,s2=0;
+    for(let i=0;i+lag<nh;i++)s+=on[i]*on[i+lag];
+    for(let i=0;i+l2<nh;i++)s2+=on[i]*on[i+l2];
+    const w=Math.exp(-Math.pow((b-115)/45,2)/2),sc=(s/(nh-lag)+0.5*s2/Math.max(1,nh-l2))*w;
+    if(sc>best){best=sc;bpm=b}
+  }
+  const sh=60/bpm/4*hr,bh=sh*4;
+  let first=0;while(first<nh&&eT[first]<0.2*tot)first++;
+  if(first>nh-120)return null;
+  let bp=0,bs=-1;
+  for(let p=0;p<bh;p++){let s=0,c=0;for(let t=first+p;t<nh-1;t+=bh){s+=on[Math.round(t)];c++}if(c&&s/c>bs){bs=s/c;bp=p}}
+  const start=first+bp,nSteps=Math.min(128,Math.floor((nh-start)/sh)),bars2=Math.floor(nSteps/16);
+  if(bars2<1)return null;
+  const n=bars2*16;
+  const thr=(a,kk)=>{let m=0;for(let h=start;h<nh;h++)m+=a[h];m/=(nh-start);let v=0;for(let h=start;h<nh;h++)v+=(a[h]-m)*(a[h]-m);return m+Math.sqrt(v/(nh-start))*kk};
+  const tL=thr(fL,0.8),tM=thr(fM,0.9),tH=thr(fH,1.1),tO=thr(on,0.9);
+  const pk=(a,h0,h1)=>{let m=0;for(let h=h0;h<=h1;h++)if(a[h]>m)m=a[h];return m};
+  const sc=SCALES[scale],kick=[],snare=[],hat=[],mel=[];let prev=-1;
+  for(let i=0;i<n;i++){
+    const ts=start+i*sh,h0=Math.max(1,Math.round(ts-1)),h1=Math.min(nh-1,Math.round(ts+sh*0.6));
+    const lo=pk(fL,h0,h1)>tL,mi=pk(fM,h0,h1)>tM,hi=pk(fH,h0,h1)>tH,strong=pk(on,h0,h1)>tO;
+    kick[i]=lo;snare[i]=mi&&!lo;hat[i]=hi&&i%2===0;mel[i]=-1;
+    const hc=Math.min(nh-1,Math.round(ts+sh*0.55));
+    if(eT[hc]>0.15*tot){
+      const f=yinPitch(x,sr,hc*hop);
+      if(f&&f>70&&f<1100){
+        const m=69+12*Math.log2(f/440);let bi=0,bd=99;
+        sc.forEach((nn,j)=>{const dd=(((m-nn)%12)+12)%12,d=Math.min(dd,12-dd);if(d<bd){bd=d;bi=j}});
+        if(bi!==prev||strong)mel[i]=bi;
+        prev=bi;
+      }
+    }
+  }
+  return{bpm,bars:Math.min(8,bars2),kick,snare,hat,mel};
+}
+function songToSquares(){
+  const msg=document.getElementById("convMsg");
+  msg.textContent=T.busy;
+  setTimeout(()=>{
+    let r=null;try{r=analyzeSong()}catch(e){r=null}
+    if(!r){msg.textContent=T.cfail;return}
+    while(bars>r.bars)removeBar();
+    while(bars<r.bars){buildBar(bars);bars++}
+    state.forEach((row,rr)=>row.forEach((_,s)=>toggle(rr,s,false)));
+    for(let i=0;i<r.bars*STEPS;i++){
+      if(r.kick[i])toggle(8,i,true);
+      if(r.snare[i])toggle(7,i,true);
+      if(r.hat[i])toggle(6,i,true);
+      if(r.mel[i]>=0)toggle(5-r.mel[i],i,true);
+    }
+    document.getElementById("bpm").value=r.bpm;document.getElementById("bpmv").textContent=r.bpm;
+    relabel();updLess();
+    songMuted=true;stopSong();labelMute();msg.textContent=T.cok.replace("{b}",r.bpm);
+  },30);
+}
+document.getElementById("convBtn").onclick=songToSquares;
+let songMuted=false,gridMuted=false;
+const smBtn=document.getElementById("songMuteBtn"),gmBtn=document.getElementById("gridMuteBtn");
+function labelMute(){smBtn.textContent=songMuted?T.songOn:T.songOff;gmBtn.textContent=gridMuted?T.gridOn:T.gridOff}
+smBtn.onclick=()=>{songMuted=!songMuted;if(songMuted)stopSong();else if(playing)startSong();labelMute()};
+gmBtn.onclick=()=>{gridMuted=!gridMuted;labelMute()};
+document.getElementById("shapeBtn").onclick=e=>{const on=document.querySelector("main").classList.toggle("shapes");e.currentTarget.setAttribute("aria-pressed",on)};
+const AVS=["🎧","🎹","🎸","🥁","🎤","🎺","🦄","🐱"];
+let prof={name:"",av:AVS[0],songs:[]};
+try{const p=JSON.parse(localStorage.getItem("mb_profile")||"null");if(p&&typeof p==="object"){prof.name=String(p.name||"").slice(0,24);prof.av=AVS.includes(p.av)?p.av:AVS[0];prof.songs=Array.isArray(p.songs)?p.songs.filter(x=>x&&typeof x.n==="string"&&typeof x.c==="string").slice(0,20):[]}}catch(e){}
+function saveProf(){try{localStorage.setItem("mb_profile",JSON.stringify(prof))}catch(e){}}
+function renderProf(){
+  const g=id=>document.getElementById(id);
+  g("chip").hidden=!prof.name;g("chip").textContent=prof.av+" "+prof.name;
+  g("pAv").textContent=prof.av;g("profBtn").textContent=prof.av+" "+T.prof;
+  g("pSongsT").textContent=T.pSongsT+" ("+prof.songs.length+")";
+  const ul=g("pList");ul.textContent="";
+  if(!prof.songs.length){const li=document.createElement("li");li.textContent=T.pEmpty;li.style.color="var(--muted)";ul.appendChild(li)}
+  prof.songs.forEach((s,i)=>{
+    const li=document.createElement("li"),nm=document.createElement("span"),b1=document.createElement("button"),b2=document.createElement("button");
+    nm.textContent=s.n;nm.className="pn";
+    b1.textContent=T.loadc;b1.onclick=()=>{g("pMsg").textContent=loadSong(s.c)?T.loaded:T.bad};
+    b2.textContent=T.pDel;b2.className="sec";b2.onclick=()=>{prof.songs.splice(i,1);saveProf();renderProf()};
+    li.append(nm,b1,b2);ul.appendChild(li);
+  });
+}
+AVS.forEach(a=>{const b=document.createElement("button");b.className="sec av";b.textContent=a;b.setAttribute("aria-label",a);b.onclick=()=>{prof.av=a;saveProf();renderProf()};document.getElementById("avs").appendChild(b)});
+document.getElementById("profBtn").onclick=()=>{const pb=document.getElementById("profbox");pb.hidden=!pb.hidden;if(!pb.hidden)document.getElementById("pName").value=prof.name};
+document.getElementById("pName").oninput=e=>{prof.name=e.target.value.slice(0,24);saveProf();renderProf()};
+document.getElementById("pSave").onclick=()=>{
+  const inp=document.getElementById("pSongName"),nm=(inp.value.trim()||T.title+" "+(prof.songs.length+1)).slice(0,30);
+  prof.songs.unshift({n:nm,c:encodeSong(),d:Date.now()});prof.songs=prof.songs.slice(0,20);
+  saveProf();inp.value="";renderProf();document.getElementById("pMsg").textContent=T.pSaved;
+};
+document.getElementById("pClose").onclick=()=>{document.getElementById("profbox").hidden=true};
+function horn(t,n,d){
+  [-6,6].forEach(c=>{
+    const o=ctx.createOscillator(),g=ctx.createGain(),f=ctx.createBiquadFilter();
+    o.type="sawtooth";o.frequency.value=midi(n);o.detune.value=c;
+    f.type="lowpass";f.frequency.value=1800;
+    env(g,t,0.03,d,0.1);
+    o.connect(f).connect(g).connect(ctx.destination);o.start(t);o.stop(t+d+0.1);
+  });
+}
+document.getElementById("tribun").onclick=()=>{
+  state.forEach((row,r)=>row.forEach((_,s)=>toggle(r,s,false)));
+  [0,4,8,10,12].forEach(s=>toggle(8,s,true));
+  [2,6,14].forEach(s=>toggle(7,s,true));
+  for(let s=0;s<STEPS;s+=2)toggle(6,s,true);
+  [0,8].forEach(s=>toggle(10,s,true));
+  [[0,2],[4,2],[8,2],[10,1],[12,0]].forEach(([s,i])=>toggle(5-i,s,true));
+};
+document.getElementById("gol").onclick=()=>{
+  init();const t=ctx.currentTime+0.05,dur=4.4;
+  // tribün gürültüsü: yavaşça yükselip sönüyor
+  const n=Math.floor(ctx.sampleRate*dur),buf=ctx.createBuffer(1,n,ctx.sampleRate),d=buf.getChannelData(0);
+  for(let i=0;i<n;i++)d[i]=Math.random()*2-1;
+  const cs=ctx.createBufferSource();cs.buffer=buf;
+  const bp=ctx.createBiquadFilter();bp.type="bandpass";bp.frequency.value=900;bp.Q.value=0.6;
+  const cg=ctx.createGain();cg.gain.setValueAtTime(0.0001,t);
+  cg.gain.exponentialRampToValueAtTime(0.5,t+0.7);
+  cg.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+  cs.connect(bp).connect(cg).connect(ctx.destination);cs.start(t);
+  // kısa fanfar
+  [60,64,67,72].forEach((m,i)=>horn(t+i*0.14,m,0.25));
+  [72,76,79].forEach(m=>horn(t+0.7,m,1.4));
+  [48,55].forEach(m=>horn(t+0.7,m,1.4));
+  // tempo: çak çak çak-çak-çak
+  [1.9,2.3,2.7,2.9,3.1,3.5,3.9,4.1].forEach(x=>noise(t+x,0.07,1500,0.5));
+};
+const $=id=>document.getElementById(id);
+const LANGS={
+ tr:{html:"tr",title:"Müzik Kutusu",sub:"Kutulara dokun, döngüyü çal. Melodi satırları seçtiğin gamda kalır, o yüzden hep ahenkli çıkar.",play:"Çal",stop:"Durdur",rand:"Rastgele üret",clear:"Temizle",gol:"GOL!",tribun:"Tribün ritmi",more:"Daha fazla kutu",less:"Son kutuyu sil",share:"Kaydet / Paylaş",hint:"Bu kodu kopyala, arkadaşına gönder. O da buraya yapıştırıp Yükle'ye basarsa senin müziğin açılır.",copy:"Kopyala",loadc:"Yükle",close:"Kapat",copied:"Kopyalandı!",bad:"Bu kod geçerli değil.",loaded:"Yüklendi!",exp:"Müziği indir",rec:"Kaydediliyor…",noExp:"Bu görünümde indirme kullanılamıyor.",expFail:"İndirilemedi.",expOk:"Hazır!",song:"Şarkı yükle",vol:"Şarkı sesi",rm:"Kaldır",snd:"Ses yükle (satır)",badA:"Bu ses dosyası açılamadı.",big:"Dosya çok büyük (en fazla 40 MB).",conv:"Şarkıyı karelere çevir",busy:"Analiz ediliyor…",cok:"Karelere çevrildi, tempo {b}. Bu yaklaşık bir çeviri, kutuları düzenleyebilirsin.",cfail:"Şarkıda çevirecek kadar ses bulunamadı.",songOff:"Arkadaki müziği durdur",songOn:"Arkadaki müziği aç",gridOff:"Kareleri durdur",gridOn:"Kareleri aç",shape:"Sembolleri değiştir",prof:"Profil",pName:"Adın",pSongsT:"Şarkılarım",pSave:"Mevcut müziği kaydet",pPh:"Müziğe bir ad ver",pDel:"Sil",pEmpty:"Henüz kayıtlı müzik yok.",pSaved:"Kaydedildi!",tempo:"Tempo",scale:"Gam",lang:"Dil",scales:["La minör pentatonik","Do majör pentatonik","Hicaz (Re)"],n:["Melodi","Zil","Trampet","Davul","Dık","Gitar akor","Gitar tel","Peluş","Okul zili","Kalem","Kapı zili","Yağmur","Kuş","Yüklenen ses"],cell:"kare",h1:"ilk yarı",h2:"ikinci yarı",grid:"Ritim ve melodi ızgarası"},
+ en:{html:"en",title:"Music Box",sub:"Tap the squares, then hit play. Melody rows stay in the chosen scale, so it always sounds good.",play:"Play",stop:"Stop",rand:"Randomize",clear:"Clear",gol:"GOAL!",tribun:"Stadium beat",more:"More boxes",less:"Remove last box",share:"Save / Share",hint:"Copy this code and send it to a friend. They paste it here and press Load to open your music.",copy:"Copy",loadc:"Load",close:"Close",copied:"Copied!",bad:"This code is not valid.",loaded:"Loaded!",exp:"Download music",rec:"Recording…",noExp:"Downloads are not available in this view.",expFail:"Could not download.",expOk:"Done!",song:"Load a song",vol:"Song volume",rm:"Remove",snd:"Load a sound (row)",badA:"This audio file could not be opened.",big:"File too large (40 MB max).",conv:"Turn song into squares",busy:"Analyzing…",cok:"Converted to squares, tempo {b}. This is an approximation, so edit the boxes as you like.",cfail:"Not enough sound found in the song.",songOff:"Stop background music",songOn:"Turn background music on",gridOff:"Stop squares",gridOn:"Turn squares on",shape:"Change symbols",prof:"Profile",pName:"Your name",pSongsT:"My songs",pSave:"Save current music",pPh:"Name your music",pDel:"Delete",pEmpty:"No saved music yet.",pSaved:"Saved!",tempo:"Tempo",scale:"Scale",lang:"Language",scales:["A minor pentatonic","C major pentatonic","Hijaz (D)"],n:["Melody","Hi-hat","Snare","Kick","Tick","Guitar chord","Guitar pluck","Plush squeak","School bell","Pencil writing","Doorbell","Rain","Bird","Your sound"],cell:"square",h1:"first half",h2:"second half",grid:"Rhythm and melody grid"},
+ pt:{html:"pt-BR",title:"Caixa de Música",sub:"Toque nos quadrados e aperte tocar. As linhas de melodia ficam na escala escolhida, então sempre soa bem.",play:"Tocar",stop:"Parar",rand:"Aleatório",clear:"Limpar",gol:"GOL!",tribun:"Ritmo de torcida",more:"Mais caixas",less:"Remover última caixa",share:"Salvar / Compartilhar",hint:"Copie este código e envie para um amigo. Ele cola aqui e aperta Carregar para abrir a sua música.",copy:"Copiar",loadc:"Carregar",close:"Fechar",copied:"Copiado!",bad:"Este código não é válido.",loaded:"Carregado!",exp:"Baixar música",rec:"Gravando…",noExp:"Downloads não estão disponíveis nesta visualização.",expFail:"Não foi possível baixar.",expOk:"Pronto!",song:"Carregar música",vol:"Volume da música",rm:"Remover",snd:"Carregar som (linha)",badA:"Não foi possível abrir este arquivo de áudio.",big:"Arquivo muito grande (máx. 40 MB).",conv:"Transformar música em quadrados",busy:"Analisando…",cok:"Convertida em quadrados, andamento {b}. É uma aproximação, edite as caixas como quiser.",cfail:"Não há som suficiente na música.",songOff:"Parar música de fundo",songOn:"Ligar música de fundo",gridOff:"Parar quadrados",gridOn:"Ligar quadrados",shape:"Mudar símbolos",prof:"Perfil",pName:"Seu nome",pSongsT:"Minhas músicas",pSave:"Salvar música atual",pPh:"Dê um nome à música",pDel:"Excluir",pEmpty:"Nenhuma música salva ainda.",pSaved:"Salvo!",tempo:"Andamento",scale:"Escala",lang:"Idioma",scales:["Lá menor pentatônica","Dó maior pentatônica","Hijaz (Ré)"],n:["Melodia","Chimbal","Caixa","Bumbo","Tique","Acorde de violão","Dedilhado de violão","Pelúcia apertada","Sinal da escola","Lápis escrevendo","Campainha","Chuva","Passarinho","Seu som"],cell:"quadrado",h1:"primeira metade",h2:"segunda metade",grid:"Grade de ritmo e melodia"},
+ fr:{html:"fr",title:"Boîte à musique",sub:"Touchez les carrés, puis lancez la lecture. Les lignes de mélodie restent dans la gamme choisie, donc ça sonne toujours juste.",play:"Lire",stop:"Arrêter",rand:"Aléatoire",clear:"Effacer",gol:"BUT !",tribun:"Rythme de stade",more:"Plus de cases",less:"Supprimer la dernière case",share:"Enregistrer / Partager",hint:"Copiez ce code et envoyez-le à un ami. Il le colle ici et appuie sur Charger pour ouvrir votre musique.",copy:"Copier",loadc:"Charger",close:"Fermer",copied:"Copié !",bad:"Ce code n’est pas valide.",loaded:"Chargé !",exp:"Télécharger la musique",rec:"Enregistrement…",noExp:"Le téléchargement n’est pas disponible ici.",expFail:"Téléchargement impossible.",expOk:"Terminé !",song:"Charger un morceau",vol:"Volume du morceau",rm:"Retirer",snd:"Charger un son (ligne)",badA:"Impossible d’ouvrir ce fichier audio.",big:"Fichier trop volumineux (40 Mo max).",conv:"Transformer le morceau en carrés",busy:"Analyse…",cok:"Converti en carrés, tempo {b}. C’est une approximation, modifiez les cases à votre guise.",cfail:"Pas assez de son dans le morceau.",songOff:"Couper la musique de fond",songOn:"Remettre la musique de fond",gridOff:"Couper les carrés",gridOn:"Remettre les carrés",shape:"Changer les symboles",prof:"Profil",pName:"Votre nom",pSongsT:"Mes morceaux",pSave:"Enregistrer la musique actuelle",pPh:"Donnez un nom à la musique",pDel:"Supprimer",pEmpty:"Aucune musique enregistrée pour l’instant.",pSaved:"Enregistré !",tempo:"Tempo",scale:"Gamme",lang:"Langue",scales:["La mineur pentatonique","Do majeur pentatonique","Hijaz (Ré)"],n:["Mélodie","Charleston","Caisse claire","Grosse caisse","Tic","Accord de guitare","Note de guitare","Peluche qui couine","Sonnerie d’école","Crayon qui écrit","Sonnette","Pluie","Oiseau","Votre son"],cell:"carré",h1:"première moitié",h2:"seconde moitié",grid:"Grille de rythme et de mélodie"},
+ ko:{html:"ko",title:"뮤직 박스",sub:"칸을 눌러 선택하고 재생을 누르세요. 멜로디 줄은 선택한 음계 안에서만 울리기 때문에 항상 조화롭게 들려요.",play:"재생",stop:"정지",rand:"무작위",clear:"지우기",gol:"골!",tribun:"응원석 리듬",more:"칸 더 추가",less:"마지막 칸 삭제",share:"저장 / 공유",hint:"이 코드를 복사해서 친구에게 보내세요. 친구가 여기에 붙여넣고 불러오기를 누르면 내 음악이 열려요.",copy:"복사",loadc:"불러오기",close:"닫기",copied:"복사됨!",bad:"올바르지 않은 코드예요.",loaded:"불러왔어요!",exp:"음악 다운로드",rec:"녹음 중…",noExp:"이 화면에서는 다운로드를 사용할 수 없어요.",expFail:"다운로드하지 못했어요.",expOk:"완료!",song:"노래 불러오기",vol:"노래 볼륨",rm:"제거",snd:"소리 불러오기(줄)",badA:"이 오디오 파일을 열 수 없어요.",big:"파일이 너무 커요 (최대 40MB).",conv:"노래를 칸으로 변환",busy:"분석 중…",cok:"칸으로 변환했어요 (템포 {b}). 대략적인 변환이니 칸을 자유롭게 고쳐 보세요.",cfail:"변환할 소리를 찾지 못했어요.",songOff:"배경 음악 끄기",songOn:"배경 음악 켜기",gridOff:"칸 소리 끄기",gridOn:"칸 소리 켜기",shape:"기호 바꾸기",prof:"프로필",pName:"이름",pSongsT:"내 음악",pSave:"현재 음악 저장",pPh:"음악 이름 짓기",pDel:"삭제",pEmpty:"저장된 음악이 아직 없어요.",pSaved:"저장됨!",tempo:"템포",scale:"음계",lang:"언어",scales:["A 마이너 펜타토닉","C 메이저 펜타토닉","히자즈 (D)"],n:["멜로디","하이햇","스네어","킥","틱","기타 코드","기타 단음","삑삑 인형","학교 종소리","연필 쓰는 소리","초인종","빗소리","새소리","내 소리"],cell:"칸",h1:"앞 절반",h2:"뒤 절반",grid:"리듬과 멜로디 격자"},
+ ja:{html:"ja",title:"ミュージックボックス",sub:"マスをタップして、再生を押してください。メロディの段は選んだスケールの中だけで鳴るので、いつも調和して聞こえます。",play:"再生",stop:"停止",rand:"ランダム",clear:"クリア",gol:"ゴール！",tribun:"スタジアムのリズム",more:"マスをもっと増やす",less:"最後のブロックを削除",share:"保存 / 共有",hint:"このコードをコピーして友達に送ってください。友達がここに貼り付けて読み込みを押すと、あなたの音楽が開きます。",copy:"コピー",loadc:"読み込み",close:"閉じる",copied:"コピーしました！",bad:"このコードは無効です。",loaded:"読み込みました！",exp:"音楽をダウンロード",rec:"録音中…",noExp:"この画面ではダウンロードできません。",expFail:"ダウンロードできませんでした。",expOk:"完了！",song:"曲を読み込む",vol:"曲の音量",rm:"削除",snd:"サウンドを読み込む（行）",badA:"この音声ファイルを開けませんでした。",big:"ファイルが大きすぎます（最大40MB）。",conv:"曲をマスに変換",busy:"解析中…",cok:"マスに変換しました（テンポ {b}）。おおよその変換なので、自由に編集してください。",cfail:"変換できる音が見つかりませんでした。",songOff:"BGMを止める",songOn:"BGMをつける",gridOff:"マスの音を止める",gridOn:"マスの音をつける",shape:"記号を変える",prof:"プロフィール",pName:"名前",pSongsT:"マイミュージック",pSave:"今の音楽を保存",pPh:"音楽に名前をつける",pDel:"削除",pEmpty:"保存した音楽はまだありません。",pSaved:"保存しました！",tempo:"テンポ",scale:"スケール",lang:"言語",scales:["Aマイナー・ペンタトニック","Cメジャー・ペンタトニック","ヒジャーズ（D）"],n:["メロディ","ハイハット","スネア","キック","カチカチ","ギターコード","ギター単音","ぬいぐるみの音","学校のチャイム","鉛筆で書く音","ドアベル","雨の音","鳥のさえずり","マイサウンド"],cell:"マス",h1:"前半",h2:"後半",grid:"リズムとメロディのグリッド"},
+ zh:{html:"zh-CN",title:"音乐盒",sub:"点击方块，然后按播放。旋律行只会使用所选音阶里的音，所以听起来总是和谐。",play:"播放",stop:"停止",rand:"随机生成",clear:"清除",gol:"进球！",tribun:"球场节奏",more:"添加更多方块",less:"删除最后一块",share:"保存 / 分享",hint:"复制这段代码发给朋友。对方粘贴到这里并点击加载，就能打开你的音乐。",copy:"复制",loadc:"加载",close:"关闭",copied:"已复制！",bad:"这个代码无效。",loaded:"已加载！",exp:"下载音乐",rec:"录制中…",noExp:"当前视图无法下载。",expFail:"下载失败。",expOk:"完成！",song:"加载歌曲",vol:"歌曲音量",rm:"移除",snd:"加载声音（行）",badA:"无法打开此音频文件。",big:"文件太大（最大 40 MB）。",conv:"把歌曲转成方块",busy:"分析中…",cok:"已转成方块（速度 {b}）。这只是近似转换，可以自由修改方块。",cfail:"歌曲中没有足够的声音。",songOff:"关闭背景音乐",songOn:"打开背景音乐",gridOff:"关闭方块声音",gridOn:"打开方块声音",shape:"更换符号",prof:"个人资料",pName:"你的名字",pSongsT:"我的音乐",pSave:"保存当前音乐",pPh:"给音乐起个名字",pDel:"删除",pEmpty:"还没有保存的音乐。",pSaved:"已保存！",tempo:"速度",scale:"音阶",lang:"语言",scales:["A 小调五声音阶","C 大调五声音阶","希贾兹（D）"],n:["旋律","踩镲","军鼓","底鼓","滴答","吉他和弦","吉他单音","捏毛绒玩具","学校铃声","铅笔书写声","门铃","雨声","鸟鸣","我的声音"],cell:"方块",h1:"前半",h2:"后半",grid:"节奏与旋律网格"}
+};
+LANGS.tw={html:"zh-TW",title:"音樂盒",sub:"點擊方塊，然後按播放。旋律列只會使用所選音階裡的音，所以聽起來總是和諧。",play:"播放",stop:"停止",rand:"隨機產生",clear:"清除",gol:"進球！",tribun:"球場節奏",more:"新增更多方塊",less:"刪除最後一塊",share:"儲存 / 分享",hint:"複製這段代碼傳給朋友。對方貼到這裡並按載入，就能打開你的音樂。",copy:"複製",loadc:"載入",close:"關閉",copied:"已複製！",bad:"這個代碼無效。",loaded:"已載入！",exp:"下載音樂",rec:"錄製中…",noExp:"目前的檢視無法下載。",expFail:"下載失敗。",expOk:"完成！",song:"載入歌曲",vol:"歌曲音量",rm:"移除",snd:"載入聲音（列）",badA:"無法開啟此音訊檔案。",big:"檔案太大（上限 40 MB）。",conv:"把歌曲轉成方塊",busy:"分析中…",cok:"已轉成方塊（速度 {b}）。這只是近似轉換，可以自由修改方塊。",cfail:"歌曲中沒有足夠的聲音。",songOff:"關閉背景音樂",songOn:"開啟背景音樂",gridOff:"關閉方塊聲音",gridOn:"開啟方塊聲音",shape:"更換符號",prof:"個人檔案",pName:"你的名字",pSongsT:"我的音樂",pSave:"儲存目前的音樂",pPh:"幫音樂取個名字",pDel:"刪除",pEmpty:"還沒有儲存的音樂。",pSaved:"已儲存！",tempo:"速度",scale:"音階",lang:"語言",scales:["A 小調五聲音階","C 大調五聲音階","希賈茲（D）"],n:["旋律","腳踏鈸","小鼓","大鼓","滴答","吉他和弦","吉他單音","捏毛絨玩具","學校鈴聲","鉛筆書寫聲","門鈴","雨聲","鳥鳴","我的聲音"],cell:"方塊",h1:"前半",h2:"後半",grid:"節奏與旋律格線"};
+const FLAGS={tw:"🇹🇼",tr:"🇹🇷",en:"🇺🇸",pt:"🇧🇷",fr:"🇫🇷",ko:"🇰🇷",ja:"🇯🇵",zh:"🇨🇳"};
+let T=LANGS.tr;
+function setTitle(s){
+  const h=$("ttl");h.setAttribute("aria-label",s);h.textContent="";
+  [...s].forEach((c,i)=>{
+    const sp=document.createElement("span");sp.className="ch";sp.setAttribute("aria-hidden","true");
+    sp.textContent=c===" "?String.fromCharCode(160):c;
+    sp.style.animationDelay=(i*0.09)+"s";
+    h.appendChild(sp);
+  });
+}
+function applyLang(c){
+  T=LANGS[c]||LANGS.tr;
+  document.documentElement.lang=T.html;document.title=T.title;
+  setTitle(T.title);$("sub").textContent=T.sub;
+  $("more").textContent=T.more;$("less").textContent=T.less;$("share").textContent=T.share;$("shareHint").textContent=T.hint;$("copyCode").textContent=T.copy;$("loadCode").textContent=T.loadc;$("closeShare").textContent=T.close;$("export").textContent=T.exp;$("songBtn").textContent=T.song;$("lVol").textContent=T.vol;$("songClear").textContent=T.rm;$("sndBtn").textContent=T.snd;$("convBtn").textContent=T.conv;$("shapeBtn").textContent=T.shape;$("lpName").textContent=T.pName;$("pSave").textContent=T.pSave;$("pClose").textContent=T.close;document.getElementById("pName").placeholder=T.pName;document.getElementById("pSongName").placeholder=T.pPh;renderProf();labelMute();$("rand").textContent=T.rand;$("clear").textContent=T.clear;$("gol").textContent=T.gol;$("tribun").textContent=T.tribun;
+  $("lTempo").textContent=T.tempo;$("lGam").textContent=T.scale;$("lLang").textContent=T.lang;
+  playBtn.textContent=playing?T.stop:T.play;
+  const so=$("scale").options;T.scales.forEach((x,i)=>so[i].textContent=x);
+  $("grid").setAttribute("aria-label",T.grid);
+  const nm=r=>r<6?T.n[0]:T.n[r-5],els=document.querySelectorAll(".name");
+  els.forEach((el,i)=>{const r=i%tracks.length;el.textContent=r===0||r>=6?nm(r):""});
+  cells.forEach((row,r)=>row.forEach((b,s)=>b.setAttribute("aria-label",nm(r)+" "+T.cell+" "+(s+1))));
+  $("flag").textContent=FLAGS[c]||FLAGS.tr;
+  try{localStorage.setItem("lang",c)}catch(e){}
+}
+$("lang").onchange=e=>applyLang(e.target.value);
+let saved="tr";try{saved=localStorage.getItem("lang")||"tr"}catch(e){}
+if(!LANGS[saved])saved="tr";
+$("lang").value=saved;applyLang(saved);
+document.getElementById("rand").click();
+})();
+</script>
+<script>
+if("serviceWorker" in navigator&&location.protocol.indexOf("http")===0){window.addEventListener("load",()=>{navigator.serviceWorker.register("sw.js").catch(()=>{})})}
+</script>
+</body>
+</html>
